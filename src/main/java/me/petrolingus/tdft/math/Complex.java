@@ -2,15 +2,14 @@ package me.petrolingus.tdft.math;
 
 public class Complex {
 
+    public static final Complex ZERO = new Complex(0, 0);
+
     private final double x;
 
     private final double y;
 
-    public static final Complex ZERO = new Complex(0, 0);
-
     public Complex(double x) {
-        this.x = x;
-        this.y = 0;
+        this(x, 0);
     }
 
     public Complex(double x, double y) {

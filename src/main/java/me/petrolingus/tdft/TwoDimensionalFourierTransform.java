@@ -12,9 +12,9 @@ import java.util.function.Function;
 
 public class TwoDimensionalFourierTransform {
 
-    public static double[][] generateSamples(GaussianParameters parameters, int quality) {
+    public static double[][] generateSamples(GaussianParameters parameters, int quality, double boundSize) {
 
-        double s = 1;
+        double s = boundSize;
         Function<Point, Double> gaussian = Functions.gaussian(parameters);
         double[][] samples = Sampler.getSamples(gaussian, -s, s, -s, s, quality, quality);
 
@@ -47,15 +47,11 @@ public class TwoDimensionalFourierTransform {
             for (int i = 0; i < width; i++) {
                 double value = samples[j][i];
                 Complex complex = new Complex(value);
-                complexSamples[j][i] = complex;
+                complexSamples[i][j] = complex;
             }
         }
 
         // Step 2
-//        Complex[][] fft1 = new Complex[width][height];
-//        for (int j = 0; j < height; j++) {
-//            fft1[j] = FastFourierTransform.fft(complexSamples[j]);
-//        }
         Complex[][] fft1 = new Complex[width][width];
         for (int i = 0; i < width; i++) {
             Complex[] column = new Complex[width];
@@ -69,14 +65,6 @@ public class TwoDimensionalFourierTransform {
         }
 
         // Step 3
-//        Complex[][] fft2 = new Complex[width][height];
-//        for (int i = 0; i < width; i++) {
-//            Complex[] column = new Complex[height];
-//            for (int j = 0; j < height; j++) {
-//                column[j] = new Complex(fft1[j][i].getX(), fft1[j][i].getY());
-//            }
-//            fft2[i] = FastFourierTransform.fft(column);
-//        }
         Complex[][] fft2 = new Complex[width][width];
         for (int i = 0; i < width; i++) {
             Complex[] row = new Complex[width];
@@ -100,41 +88,6 @@ public class TwoDimensionalFourierTransform {
                 }
             }
         }
-//        for (int j = 0; j < width; j++) {
-//            for (int i = 0; i < width; i++) {
-//                double x = fft2[j][i].getX();
-//                double y = fft2[j][i].getY();
-//                result[i][j] = (Math.sqrt(x * x + y * y));
-//            }
-//        }
-
-//        double max = Double.MIN_VALUE;
-//        double min = Double.MAX_VALUE;
-//        for (int i = 0; i < width; i++) {
-//            for (int j = 0; j < width; j++) {
-//                if (result[i][j] > max) {
-//                    max = result[i][j];
-//                }
-//                if (result[i][j] < min) {
-//                    min = result[i][j];
-//                }
-//            }
-//        }
-
-//        for (int i = 0; i < width; i++) {
-//            for (int j = 0; j < width; j++) {
-//                result[i][j] = 1.0 - normalize(result[i][j], min, max);
-//                if (result[i][j] < 0) {
-//                    System.err.println("<0");
-//                }
-//                if (result[i][j] > 1) {
-//                    System.err.println(">1");
-//                }
-//            }
-//        }
-
-//        System.out.println("min " + min);
-//        System.out.println("max " + max);
 
         return result;
     }
@@ -144,15 +97,11 @@ public class TwoDimensionalFourierTransform {
         int width = samples.length;
 
         // Step 2
-//        Complex[][] fft1 = new Complex[width][height];
-//        for (int j = 0; j < height; j++) {
-//            fft1[j] = FastFourierTransform.fft(complexSamples[j]);
-//        }
         Complex[][] fft1 = new Complex[width][width];
         for (int i = 0; i < width; i++) {
             Complex[] column = new Complex[width];
             for (int j = 0; j < width; j++) {
-                column[j] = samples[j][i];
+                column[j] = samples[i][j];
             }
             Complex[] columnFft = FastFourierTransform.ifft(column);
             for (int j = 0; j < width; j++) {
@@ -161,14 +110,6 @@ public class TwoDimensionalFourierTransform {
         }
 
         // Step 3
-//        Complex[][] fft2 = new Complex[width][height];
-//        for (int i = 0; i < width; i++) {
-//            Complex[] column = new Complex[height];
-//            for (int j = 0; j < height; j++) {
-//                column[j] = new Complex(fft1[j][i].getX(), fft1[j][i].getY());
-//            }
-//            fft2[i] = FastFourierTransform.fft(column);
-//        }
         Complex[][] fft2 = new Complex[width][width];
         for (int i = 0; i < width; i++) {
             Complex[] row = new Complex[width];
@@ -194,59 +135,6 @@ public class TwoDimensionalFourierTransform {
             }
         }
 
-//        double[][] result = new double[width][width];
-//        for (int j = 0; j < height; j++) {
-//            for (int i = 0; i < width; i++) {
-//                double x = fft2[j][i].getX();
-//                double y = fft2[j][i].getY();
-//                double value = (Math.sqrt(x * x + y * y));
-//                if (j < width / 2 && i < width / 2) {
-//                    result[i + width / 2][j + width / 2] = value;
-//                } else if (j >= width / 2 && i >= width / 2) {
-//                    result[i - width / 2][j - width / 2] = value;
-//                } else if (j < width / 2 && i >= width / 2) {
-//                    result[i - width / 2][j + width / 2] = value;
-//                } else {
-//                    result[i + width / 2][j - width / 2] = value;
-//                }
-//            }
-//        }
-//        for (int j = 0; j < width; j++) {
-//            for (int i = 0; i < width; i++) {
-//                double x = fft2[j][i].getX();
-//                double y = fft2[j][i].getY();
-//                result[i][j] = (Math.sqrt(x * x + y * y));
-//            }
-//        }
-
-//        double max = Double.MIN_VALUE;
-//        double min = Double.MAX_VALUE;
-//        for (int i = 0; i < width; i++) {
-//            for (int j = 0; j < width; j++) {
-//                if (result[i][j] > max) {
-//                    max = result[i][j];
-//                }
-//                if (result[i][j] < min) {
-//                    min = result[i][j];
-//                }
-//            }
-//        }
-
-//        for (int i = 0; i < width; i++) {
-//            for (int j = 0; j < width; j++) {
-//                result[i][j] = 1.0 - normalize(result[i][j], min, max);
-//                if (result[i][j] < 0) {
-//                    System.err.println("<0");
-//                }
-//                if (result[i][j] > 1) {
-//                    System.err.println(">1");
-//                }
-//            }
-//        }
-
-//        System.out.println("min " + min);
-//        System.out.println("max " + max);
-
         return result;
     }
 
@@ -258,7 +146,7 @@ public class TwoDimensionalFourierTransform {
             for (int i = 0; i < complexes.length; i++) {
                 double x = complexes[j][i].getX();
                 double y = complexes[j][i].getY();
-                double value = Math.log1p(Math.sqrt(x * x + y * y));
+                double value = Math.log10(Math.sqrt(x * x + y * y));
                 int v = complexes.length;
                 res[j][i] = value;
 //                if (j < v / 2 && i < v / 2) {
@@ -314,6 +202,30 @@ public class TwoDimensionalFourierTransform {
                 double value = data[i][j];
                 result[i][j] = d < threshold ? value : 0;
                 fftData[i][j] = d < threshold ? fftData[i][j] : Complex.ZERO;
+            }
+        }
+        return result;
+    }
+
+    public static double[][] lowAmplitudeFiltering(double threshold, Complex[][] fftData, double[][] data) {
+        double[][] result = new double[data.length][data.length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data.length; j++) {
+                double value = data[i][j];
+                result[i][j] = value > threshold ? value : 0;
+                fftData[i][j] = value > threshold ? fftData[i][j] : Complex.ZERO;
+            }
+        }
+        return result;
+    }
+
+    public static double[][] highAmplitudeFiltering(double threshold, Complex[][] fftData, double[][] data) {
+        double[][] result = new double[data.length][data.length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data.length; j++) {
+                double value = data[i][j];
+                result[i][j] = value < threshold ? value : 0;
+                fftData[i][j] = value < threshold ? fftData[i][j] : Complex.ZERO;
             }
         }
         return result;

@@ -2,15 +2,15 @@ package me.petrolingus.tdft.math.core;
 
 public class GaussianParameters {
 
-    public double a;
+    public final double a;
 
-    public double x0;
+    public final double x0;
 
-    public double y0;
+    public final double y0;
 
-    public double sx;
+    public final double sx;
 
-    public double sy;
+    public final double sy;
 
     public GaussianParameters(double a, double x0, double y0, double sx, double sy) {
         this.a = a;

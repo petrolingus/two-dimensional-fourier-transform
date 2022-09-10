@@ -1,6 +1,5 @@
 package me.petrolingus.tdft.math;
 
-import java.awt.*;
 import java.util.function.Function;
 
 public class Sampler {
@@ -36,7 +35,7 @@ public class Sampler {
             double y = ay + hy * j;
             for (int i = 0; i < nx; i++) {
                 double x = ax + hx * i;
-                samples[j][i] = function.apply(new Point(x, y));
+                samples[i][j] = function.apply(new Point(x, y));
             }
         }
 
