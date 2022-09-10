@@ -6,6 +6,8 @@ public class Complex {
 
     private final double y;
 
+    public static final Complex ZERO = new Complex(0, 0);
+
     public Complex(double x) {
         this.x = x;
         this.y = 0;

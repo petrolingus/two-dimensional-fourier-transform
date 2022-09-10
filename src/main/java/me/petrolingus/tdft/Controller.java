@@ -2,29 +2,66 @@ package me.petrolingus.tdft;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import me.petrolingus.tdft.math.Complex;
 import me.petrolingus.tdft.math.core.GaussianParameters;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Arrays;
 
 public class Controller {
 
-    public Canvas canvas;
-    public Canvas canvas1;
+    public Pane canvasPane0;
+    public Pane canvasPane1;
+    public Pane canvasPane2;
+    public Pane canvasPane3;
+
+    public ResizableCanvas canvas0;
+    public ResizableCanvas canvas1;
+    public ResizableCanvas canvas2;
+    public ResizableCanvas canvas3;
 
     public TextField amplitude1;
     public TextField x01;
     public TextField y01;
-    public TextField  sx1;
-    public TextField  sy1;
+    public TextField sx1;
+    public TextField sy1;
 
     public TextField qualityLabel;
-
+    public TextField thresholdLabel;
+    public TextField noiseLevel;
+    public ChoiceBox<String> chooseBox;
     private final int padding = 4;
 
-    public void initialize() {
-        onButton();
+    public void createCanvas(Pane canvasPane, Canvas canvas) {
+        canvas.widthProperty().bind(canvasPane.widthProperty());
+        canvas.heightProperty().bind(canvasPane.heightProperty());
+        canvasPane.getChildren().add(canvas);
+    }
+
+    public void initialize() throws URISyntaxException {
+
+        canvas0 = new ResizableCanvas();
+        canvas1 = new ResizableCanvas();
+        canvas2 = new ResizableCanvas();
+        canvas3 = new ResizableCanvas();
+
+        createCanvas(canvasPane0, canvas0);
+        createCanvas(canvasPane1, canvas1);
+        createCanvas(canvasPane2, canvas2);
+        createCanvas(canvasPane3, canvas3);
+
+        chooseBox.getItems().addAll("Low Pass", "High Pass");
+        chooseBox.setValue("Low Pass");
+
+//        onButton();
     }
 
     private void drawImage(Canvas canvas, Image image) {
@@ -63,10 +100,7 @@ public class Controller {
         context.drawImage(image, shift, shift);
     }
 
-    public void onButton() {
-        int width = (int) canvas.getWidth();
-        int height = (int) canvas.getHeight();
-        int imageSize = width - padding;
+    public void onButton() throws URISyntaxException {
 
         GaussianParameters gaussianParameters = new GaussianParameters(
                 Double.parseDouble(amplitude1.getText()),
@@ -75,13 +109,66 @@ public class Controller {
                 Double.parseDouble(sx1.getText()),
                 Double.parseDouble(sy1.getText())
         );
+
+
+        int width = (int) canvas0.getWidth();
+        int height = (int) canvas0.getHeight();
+        int imageSize = width - padding;
+
+        // Generate samples [OK]
         double[][] samples = TwoDimensionalFourierTransform.generateSamples(gaussianParameters, Integer.parseInt(qualityLabel.getText()));
-        double[][] transform = TwoDimensionalFourierTransform.transform(samples);
-
+//        samples = getImageSamples();
+        TwoDimensionalFourierTransform.noise(samples, Double.parseDouble(noiseLevel.getText()));
         Image image0 = TwoDimensionalFourierTransform.generateImage(imageSize, imageSize, samples);
-        drawImage(canvas, image0);
+        drawImage(canvas0, image0);
 
-        Image image1 = TwoDimensionalFourierTransform.generateImage(imageSize, imageSize, transform);
+        // Forward FFT [OK]
+        Complex[][] transform = TwoDimensionalFourierTransform.transform(samples);
+        double[][] transformPixels = TwoDimensionalFourierTransform.process(transform);
+        Image image1 = TwoDimensionalFourierTransform.generateImage(imageSize, imageSize, transformPixels);
         drawImage(canvas1, image1);
+
+        // Process [OK]
+        double[][] processedPixels;
+        if (chooseBox.getValue().equals("Low Pass")) {
+            processedPixels = TwoDimensionalFourierTransform.lowPassFiltering(Double.parseDouble(thresholdLabel.getText()), transform, transformPixels);
+        } else {
+            processedPixels = TwoDimensionalFourierTransform.highPassFiltering(Double.parseDouble(thresholdLabel.getText()), transform, transformPixels);
+        }
+        Image image2 = TwoDimensionalFourierTransform.generateImage(imageSize, imageSize, processedPixels);
+        drawImage(canvas2, image2);
+
+        // Backward FFT [OK]
+        Complex[][] restored = TwoDimensionalFourierTransform.itransform(transform);
+        double[][] restoredPixels = new double[transform.length][transform.length];
+        for (int i = 0; i < restoredPixels.length; i++) {
+            for (int j = 0; j < restoredPixels.length; j++) {
+                Complex value = restored[i][j];
+                restoredPixels[i][j] = Math.sqrt(value.getX() * value.getX() + value.getY() * value.getY());
+            }
+        }
+        Image image3 = TwoDimensionalFourierTransform.generateImage(imageSize, imageSize, restoredPixels);
+        drawImage(canvas3, image3);
+    }
+
+    private double[][] getImageSamples() throws URISyntaxException {
+        URL resource = Main.class.getResource("rose.jpeg");
+        File file = new File(resource.toURI());
+        Image image = new Image(file.toURI().toString());
+        int[] pixels = new int[512 * 512];
+        image.getPixelReader().getPixels(0, 0, 512, 512, PixelFormat.getIntArgbInstance(), pixels, 0, 512);
+        double mx = Arrays.stream(pixels).mapToDouble(Double::valueOf).max().orElse(Double.NaN);
+        double mn = Arrays.stream(pixels).mapToDouble(Double::valueOf).min().orElse(Double.NaN);
+        System.out.println("The maximum is " + mx);
+        System.out.println("The maximum is " + mn);
+        double[][] imageSamples = new double[512][512];
+        for (int i = 0; i < 512; i++) {
+            for (int j = 0; j < 512; j++) {
+                int value = pixels[j + 512 * i];
+                double valued = TwoDimensionalFourierTransform.normalize(value, mn, mx);
+                imageSamples[j][511 - i] = valued;
+            }
+        }
+        return imageSamples;
     }
 }
