@@ -1,5 +1,7 @@
 package me.petrolingus.tdft.math.core;
 
+import javafx.scene.control.TextField;
+
 public class GaussianParameters {
 
     public final double a;
@@ -18,5 +20,15 @@ public class GaussianParameters {
         this.y0 = y0;
         this.sx = sx;
         this.sy = sy;
+    }
+
+    public static GaussianParameters getGaussianParameters(TextField amplitude, TextField x0, TextField y0, TextField sx, TextField sy) {
+        return new GaussianParameters(
+                Double.parseDouble(amplitude.getText()),
+                Double.parseDouble(x0.getText()),
+                Double.parseDouble(y0.getText()),
+                Double.parseDouble(sx.getText()),
+                Double.parseDouble(sy.getText())
+        );
     }
 }

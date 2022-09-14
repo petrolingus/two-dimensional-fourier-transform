@@ -12,7 +12,9 @@ public class Functions {
         double y0 = parameters.y0;
         double sx = parameters.sx;
         double sy = parameters.sy;
-        return (p) -> a * Math.exp(-(Math.pow(p.x - x0, 2) / (2.0 * sx * sx) + Math.pow(p.y - y0, 2) / (2.0 * sy * sy)));
+        double sxsx2 = 2.0 * sx * sx;
+        double sysy2 = 2.0 * sy * sy;
+        return (p) -> a * Math.exp(-(Math.pow(p.x - x0, 2) / sxsx2 + Math.pow(p.y - y0, 2) / sysy2));
     }
 
     public static Function<Point, Double> rect(GaussianParameters parameters) {
@@ -21,6 +23,6 @@ public class Functions {
         double y0 = parameters.y0;
         double sx = parameters.sx;
         double sy = parameters.sy;
-        return (p) -> (p.x > x0 - sx && p.x < x0 + sx && p.y > y0 - sy && p.y < y0 + sy) ? 1.0 : 0.0;
+        return (p) -> (p.x > x0 - sx && p.x < x0 + sx && p.y > y0 - sy && p.y < y0 + sy) ? a : 0.0;
     }
 }

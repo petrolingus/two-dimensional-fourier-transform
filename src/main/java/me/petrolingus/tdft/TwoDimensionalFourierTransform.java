@@ -7,18 +7,43 @@ import javafx.scene.image.WritableImage;
 import me.petrolingus.tdft.math.*;
 import me.petrolingus.tdft.math.core.GaussianParameters;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public class TwoDimensionalFourierTransform {
 
-    public static double[][] generateSamples(GaussianParameters parameters, int quality, double boundSize) {
+    public static double[][] generateSamples(GaussianParameters[] parameters, int quality, double bound) {
 
-        double s = boundSize;
-        Function<Point, Double> gaussian = Functions.gaussian(parameters);
-        double[][] samples = Sampler.getSamples(gaussian, -s, s, -s, s, quality, quality);
+        Sampler sampler = new Sampler(-bound, bound, -bound, bound, quality, quality);
 
-        return samples;
+        List<Function<Point, Double>> list = new ArrayList<>();
+        for (GaussianParameters gaussianParameter : parameters) {
+            list.add(Functions.gaussian(gaussianParameter));
+        }
+
+        return sampler.getSamples(list);
+    }
+
+    public static void normalize(double[][] samples) {
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        for (double[] row : samples) {
+            for (double sample : row) {
+                if (sample > max) {
+                    max = sample;
+                }
+                if (sample < min) {
+                    min = sample;
+                }
+            }
+        }
+        for (int i = 0; i < samples.length; i++) {
+            for (int j = 0; j < samples.length; j++) {
+                samples[i][j] = normalize(samples[i][j], min, max);
+            }
+        }
     }
 
     public static Image generateImage(int width, int height, double[][] samples) {

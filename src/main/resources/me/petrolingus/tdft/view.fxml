@@ -14,7 +14,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
 <HBox xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="me.petrolingus.tdft.Controller">
    <children>
       <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0" HBox.hgrow="ALWAYS">
@@ -28,16 +27,18 @@
                         <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" />
                         <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" />
                         <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+                        <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="10.0" />
                      </columnConstraints>
                      <rowConstraints>
                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                      </rowConstraints>
                      <children>
-                        <Pane fx:id="canvasPane0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" />
-                        <Pane fx:id="canvasPane1" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="1" />
-                        <Pane fx:id="canvasPane2" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="2" />
-                        <Pane fx:id="canvasPane3" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="3" />
-                        <Pane fx:id="canvasPane4" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="4" />
+                        <Pane fx:id="originalImagePane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" />
+                        <Pane fx:id="noiseImagePane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="1" />
+                        <Pane fx:id="canvasPane1" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="2" />
+                        <Pane fx:id="canvasPane2" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="3" />
+                        <Pane fx:id="canvasPane3" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="4" />
+                        <Pane fx:id="canvasPane4" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="512.0" prefWidth="512.0" style="-fx-border-color: lightgray;" GridPane.columnIndex="5" />
                      </children>
                   </GridPane>
                </content>
@@ -259,14 +260,14 @@
                         <ChoiceBox fx:id="chooseBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="4" GridPane.rowIndex="1" />
                         <TextField fx:id="qualityLabel" maxWidth="1.7976931348623157E308" text="512" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                         <TextField fx:id="thresholdLabel" maxWidth="1.7976931348623157E308" text="5" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                        <TextField fx:id="noiseLevel" maxWidth="1.7976931348623157E308" text="1" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                        <TextField fx:id="noiseLevelLabel" maxWidth="1.7976931348623157E308" text="1" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                         <Label text="Bound Size" GridPane.columnIndex="1" GridPane.rowIndex="2">
                            <font>
                               <Font name="Tahoma" size="11.0" />
                            </font>
                         </Label>
                         <TextField fx:id="boundSizeLabel" maxWidth="1.7976931348623157E308" text="1" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                        <TextField GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                        <TextField fx:id="diffLabel" editable="false" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                         <TextField GridPane.columnIndex="3" GridPane.rowIndex="3" />
                         <TextField GridPane.columnIndex="4" GridPane.rowIndex="3" />
                      </children>
