@@ -1,121 +1,26 @@
-package me.petrolingus.tdft;
+package me.petrolingus.tdft.core;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import me.petrolingus.tdft.math.*;
-import me.petrolingus.tdft.math.core.GaussianParameters;
+import me.petrolingus.tdft.core.math.*;
+import me.petrolingus.tdft.core.math.GaussianParameters;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
-public class TwoDimensionalFourierTransform {
+public class Algorithm {
 
-    public static double[][] generateSamples(GaussianParameters[] parameters, int quality, double bound) {
+    private static void normalize(double[][] samples) {
 
-        Sampler sampler = new Sampler(-bound, bound, -bound, bound, quality, quality);
-
-        List<Function<Point, Double>> list = new ArrayList<>();
-        for (GaussianParameters gaussianParameter : parameters) {
-            list.add(Functions.gaussian(gaussianParameter));
-        }
-
-        return sampler.getSamples(list);
     }
 
-    public static void normalize(double[][] samples) {
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-        for (double[] row : samples) {
-            for (double sample : row) {
-                if (sample > max) {
-                    max = sample;
-                }
-                if (sample < min) {
-                    min = sample;
-                }
-            }
-        }
-        for (int i = 0; i < samples.length; i++) {
-            for (int j = 0; j < samples.length; j++) {
-                samples[i][j] = normalize(samples[i][j], min, max);
-            }
-        }
-    }
 
-    public static Image generateImage(int width, int height, double[][] samples) {
-        int[] pixels = new int[width * height];
-        for (int i = 0; i < pixels.length; i++) {
-            int col = (i % width) * samples.length / width;
-            int row = (i / width) * samples.length / width;
-            int value = (int) Math.floor(255.0 * samples[col][samples.length - row - 1]);
-            pixels[i] = (0xFF << 24) | (value << 16) | (value << 8) | value;
-        }
 
-        WritableImage image = new WritableImage(width, height);
-        PixelWriter pixelWriter = image.getPixelWriter();
-        pixelWriter.setPixels(0, 0, width, height, PixelFormat.getIntArgbInstance(), pixels, 0, width);
 
-        return image;
-    }
-
-    public static Complex[][] transform(double[][] samples) {
-
-        int width = samples.length;
-
-        // Step 1
-        Complex[][] complexSamples = new Complex[width][width];
-        for (int j = 0; j < width; j++) {
-            for (int i = 0; i < width; i++) {
-                double value = samples[j][i];
-                Complex complex = new Complex(value);
-                complexSamples[i][j] = complex;
-            }
-        }
-
-        // Step 2
-        Complex[][] fft1 = new Complex[width][width];
-        for (int i = 0; i < width; i++) {
-            Complex[] column = new Complex[width];
-            for (int j = 0; j < width; j++) {
-                column[j] = complexSamples[j][i];
-            }
-            Complex[] columnFft = FastFourierTransform.fft(column);
-            for (int j = 0; j < width; j++) {
-                fft1[j][i] = columnFft[j];
-            }
-        }
-
-        // Step 3
-        Complex[][] fft2 = new Complex[width][width];
-        for (int i = 0; i < width; i++) {
-            Complex[] row = new Complex[width];
-            System.arraycopy(fft1[i], 0, row, 0, width);
-            Complex[] rowFft = FastFourierTransform.fft(row);
-            System.arraycopy(rowFft, 0, fft2[i], 0, width);
-        }
-
-        Complex[][] result = new Complex[width][width];
-        for (int j = 0; j < width; j++) {
-            for (int i = 0; i < width; i++) {
-                Complex value = fft2[j][i];
-                if (j < width / 2 && i < width / 2) {
-                    result[i + width / 2][j + width / 2] = value;
-                } else if (j >= width / 2 && i >= width / 2) {
-                    result[i - width / 2][j - width / 2] = value;
-                } else if (j < width / 2 && i >= width / 2) {
-                    result[i - width / 2][j + width / 2] = value;
-                } else {
-                    result[i + width / 2][j - width / 2] = value;
-                }
-            }
-        }
-
-        return result;
-    }
 
     public static Complex[][] itransform(Complex[][] samples) {
 
@@ -199,7 +104,7 @@ public class TwoDimensionalFourierTransform {
         }
         for (int i = 0; i < complexes.length; i++) {
             for (int j = 0; j < complexes.length; j++) {
-                res[i][j] = TwoDimensionalFourierTransform.normalize(res[i][j], min, max);
+                res[i][j] = Algorithm.normalize(res[i][j], min, max);
             }
         }
 
@@ -260,8 +165,8 @@ public class TwoDimensionalFourierTransform {
      * Calculates a value between 0 and 1, given the precondition that value
      * is between min and max. 0 means value = max, and 1 means value = min.
      */
-    static double normalize(double value, double min, double max) {
-        return ((value - min) / (max - min));
+    public static double normalize(double value, double min, double max) {
+        return 0;
     }
 
     public static void noise(double[][] samples, double noiseLevel) {

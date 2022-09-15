@@ -1,6 +1,4 @@
-package me.petrolingus.tdft.math;
-
-import me.petrolingus.tdft.math.core.GaussianParameters;
+package me.petrolingus.tdft.core.math;
 
 import java.util.function.Function;
 

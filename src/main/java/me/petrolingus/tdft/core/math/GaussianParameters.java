@@ -1,4 +1,4 @@
-package me.petrolingus.tdft.math.core;
+package me.petrolingus.tdft.core.math;
 
 import javafx.scene.control.TextField;
 

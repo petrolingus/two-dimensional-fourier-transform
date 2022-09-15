@@ -1,4 +1,4 @@
-package me.petrolingus.tdft.math;
+package me.petrolingus.tdft.core.math;
 
 public class Complex {
 
@@ -45,5 +45,9 @@ public class Complex {
 
     public double getY() {
         return y;
+    }
+
+    public double magnitude() {
+        return Math.sqrt(x * x + y * y);
     }
 }

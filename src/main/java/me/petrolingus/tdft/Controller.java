@@ -3,22 +3,22 @@ package me.petrolingus.tdft;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import me.petrolingus.tdft.math.Complex;
-import me.petrolingus.tdft.math.core.GaussianParameters;
-import org.w3c.dom.Text;
+import me.petrolingus.tdft.core.Algorithm;
+import me.petrolingus.tdft.core.interpolation.BilinearInterpolation;
+import me.petrolingus.tdft.core.math.*;
+import me.petrolingus.tdft.core.signal.TwoDimensionalComplexSignal;
+import me.petrolingus.tdft.core.signal.TwoDimensionalRealSignal;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
-
-import static me.petrolingus.tdft.math.core.GaussianParameters.getGaussianParameters;
+import java.util.List;
+import java.util.function.Function;
 
 public class Controller {
 
@@ -93,131 +93,71 @@ public class Controller {
 
     private void drawImage(Canvas canvas, Image image) {
         GraphicsContext context = canvas.getGraphicsContext2D();
-        double imageWidth = image.getWidth();
-        double canvasWidth = canvas.getWidth();
-        double shift = (canvasWidth - imageWidth) / 2.0;
-//        context.setFill(Color.LIGHTBLUE);
-//        context.fillRect(0, 0, canvasWidth, canvasWidth);
-        context.setStroke(Color.color(0, 0.47, 0.84));
-        context.setLineWidth(4);
-        context.strokeRect(0, 0, canvasWidth, canvasWidth);
-
-//        double h = imageWidth / 16;
-//        double center = canvasWidth / 2;
-//        double gridLength = padding / 4.0;
-//        context.strokeLine(center, 0, center, gridLength);
-//        context.strokeLine(center, canvasWidth, center, canvasWidth - gridLength);
-//        for (int i = 1; i < 8; i++) {
-//            double x1 = center + h * i;
-//            double x2 = center - h * i;
-//            // TOP
-//            context.strokeLine(x1, 0, x1, gridLength);
-//            context.strokeLine(x2, 0, x2, gridLength);
-//            // BOTTOM
-//            context.strokeLine(x1, canvasWidth, x1, canvasWidth - gridLength);
-//            context.strokeLine(x2, canvasWidth, x2, canvasWidth - gridLength);
-//            // LEFT
-//            context.strokeLine(0, x1, gridLength, x1);
-//            context.strokeLine(0, x2, gridLength, x2);
-//            // RIGHT
-//            context.strokeLine(canvasWidth, x1, canvasWidth - gridLength, x1);
-//            context.strokeLine(canvasWidth, x2, canvasWidth - gridLength, x2);
-//        }
-
-        context.drawImage(image, shift, shift);
+        context.drawImage(image, 0, 0);
     }
 
     public void onButton() {
 
-        int width = (int) noiseImageCanvas.getWidth();
-        int height = (int) noiseImageCanvas.getHeight();
+        int width = (int) originalImageCanvas.getWidth();
+        int height = (int) originalImageCanvas.getHeight();
 
-        GaussianParameters gaussianParameters1 = getGaussianParameters(amplitude1, x01, y01, sx1, sy1);
-        GaussianParameters gaussianParameters2 = getGaussianParameters(amplitude2, x02, y02, sx2, sy2);
-        GaussianParameters gaussianParameters3 = getGaussianParameters(amplitude3, x03, y03, sx3, sy3);
-        GaussianParameters[] gaussianParameters = new GaussianParameters[]{
-                gaussianParameters1,
-                gaussianParameters2,
-                gaussianParameters3
-        };
+        List<Function<Point, Double>> functions = List.of(
+                Functions.gaussian(GaussianParameters.getGaussianParameters(amplitude1, x01, y01, sx1, sy1)),
+                Functions.gaussian(GaussianParameters.getGaussianParameters(amplitude2, x02, y02, sx2, sy2)),
+                Functions.gaussian(GaussianParameters.getGaussianParameters(amplitude3, x03, y03, sx3, sy3))
+        );
 
-        // Generate samples
-        int quality = Integer.parseInt(qualityLabel.getText());
-        double boundSize = Double.parseDouble(boundSizeLabel.getText());
-        double[][] samples = TwoDimensionalFourierTransform.generateSamples(gaussianParameters, quality, boundSize);
-        TwoDimensionalFourierTransform.normalize(samples);
-        Image originalImage = TwoDimensionalFourierTransform.generateImage(width, height, samples);
-        drawImage(originalImageCanvas, originalImage);
-        drawImage(canvas4, originalImage);
+
+        // Generate signal
+        TwoDimensionalRealSignal signal = new TwoDimensionalRealSignal(width, height, functions);
+        TwoDimensionalRealSignal originalSignal = BilinearInterpolation.interpolate(signal, width, height);
+        drawImage(originalImageCanvas, originalSignal.getImage());
 
         // Generate noise
-        double noiseLevel = Double.parseDouble(noiseLevelLabel.getText());
-        TwoDimensionalFourierTransform.noise(samples, noiseLevel);
-        Image image0 = TwoDimensionalFourierTransform.generateImage(width, height, samples);
-        drawImage(noiseImageCanvas, image0);
+//        double noiseLevel = Double.parseDouble(noiseLevelLabel.getText());
+//        Algorithm.noise(originalImageSamples, noiseLevel);
+//        Image image0 = Algorithm.generateImage(width, height, originalImageSamples);
+//        drawImage(noiseImageCanvas, image0);
 
         // Forward FFT
-        Complex[][] transform = TwoDimensionalFourierTransform.transform(samples);
-        double[][] transformPixels = TwoDimensionalFourierTransform.process(transform);
-        Image image1 = TwoDimensionalFourierTransform.generateImage(width, height, transformPixels);
-        drawImage(canvas1, image1);
+        TwoDimensionalComplexSignal spectrumSignal = new TwoDimensionalComplexSignal(originalSignal);
+        drawImage(canvas1, spectrumSignal.getImage());
 
-        // Filtering
-        double[][] processedPixels;
-        double threshold = Double.parseDouble(thresholdLabel.getText());
-        if (chooseBox.getValue().equals("Low Pass")) {
-            processedPixels = TwoDimensionalFourierTransform.lowPassFiltering(threshold, transform, transformPixels);
-        } else if (chooseBox.getValue().equals("High Pass")) {
-            processedPixels = TwoDimensionalFourierTransform.highPassFiltering(threshold, transform, transformPixels);
-        } else if (chooseBox.getValue().equals("High Amplitude")) {
-            processedPixels = TwoDimensionalFourierTransform.highAmplitudeFiltering(threshold, transform, transformPixels);
-        } else {
-            processedPixels = TwoDimensionalFourierTransform.lowAmplitudeFiltering(threshold, transform, transformPixels);
-        }
-        Image image2 = TwoDimensionalFourierTransform.generateImage(width, height, processedPixels);
-        drawImage(canvas2, image2);
-
-        // Backward FFT
-        Complex[][] restored = TwoDimensionalFourierTransform.itransform(transform);
-        double[][] restoredPixels = new double[transform.length][transform.length];
-        for (int i = 0; i < restoredPixels.length; i++) {
-            for (int j = 0; j < restoredPixels.length; j++) {
-                Complex value = restored[i][j];
-                restoredPixels[i][j] = Math.sqrt(value.getX() * value.getX() + value.getY() * value.getY());
-            }
-        }
-        Image image3 = TwoDimensionalFourierTransform.generateImage(width, height, restoredPixels);
-        drawImage(canvas3, image3);
-
-        double diff = 0;
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                double d = samples[i][j] - restoredPixels[i][j];
-//                double d = samples[i][j] - processedPixels[i][j];
-                diff += d * d;
-            }
-        }
-        diffLabel.setText(diff + "");
-    }
-
-    private double[][] getImageSamples() throws URISyntaxException {
-        URL resource = Main.class.getResource("rose.jpeg");
-        File file = new File(resource.toURI());
-        Image image = new Image(file.toURI().toString());
-        int[] pixels = new int[512 * 512];
-        image.getPixelReader().getPixels(0, 0, 512, 512, PixelFormat.getIntArgbInstance(), pixels, 0, 512);
-        double mx = Arrays.stream(pixels).mapToDouble(Double::valueOf).max().orElse(Double.NaN);
-        double mn = Arrays.stream(pixels).mapToDouble(Double::valueOf).min().orElse(Double.NaN);
-        System.out.println("The maximum is " + mx);
-        System.out.println("The maximum is " + mn);
-        double[][] imageSamples = new double[512][512];
-        for (int i = 0; i < 512; i++) {
-            for (int j = 0; j < 512; j++) {
-                int value = pixels[j + 512 * i];
-                double valued = TwoDimensionalFourierTransform.normalize(value, mn, mx);
-                imageSamples[j][511 - i] = valued;
-            }
-        }
-        return imageSamples;
+//        // Filtering
+//        double[][] processedPixels;
+//        double threshold = Double.parseDouble(thresholdLabel.getText());
+//        if (chooseBox.getValue().equals("Low Pass")) {
+//            processedPixels = Algorithm.lowPassFiltering(threshold, transform, transformPixels);
+//        } else if (chooseBox.getValue().equals("High Pass")) {
+//            processedPixels = Algorithm.highPassFiltering(threshold, transform, transformPixels);
+//        } else if (chooseBox.getValue().equals("High Amplitude")) {
+//            processedPixels = Algorithm.highAmplitudeFiltering(threshold, transform, transformPixels);
+//        } else {
+//            processedPixels = Algorithm.lowAmplitudeFiltering(threshold, transform, transformPixels);
+//        }
+//        Image image2 = Algorithm.generateImage(width, height, processedPixels);
+//        drawImage(canvas2, image2);
+//
+//        // Backward FFT
+//        Complex[][] restored = Algorithm.itransform(transform);
+//        double[][] restoredPixels = new double[transform.length][transform.length];
+//        for (int i = 0; i < restoredPixels.length; i++) {
+//            for (int j = 0; j < restoredPixels.length; j++) {
+//                Complex value = restored[i][j];
+//                restoredPixels[i][j] = Math.sqrt(value.getX() * value.getX() + value.getY() * value.getY());
+//            }
+//        }
+//        Image image3 = Algorithm.generateImage(width, height, restoredPixels);
+//        drawImage(canvas3, image3);
+//
+//        double diff = 0;
+//        for (int i = 0; i < width; i++) {
+//            for (int j = 0; j < height; j++) {
+//                double d = originalImageSamples[i][j] - restoredPixels[i][j];
+////                double d = originalImageSamples[i][j] - processedPixels[i][j];
+//                diff += d * d;
+//            }
+//        }
+//        diffLabel.setText(diff + "");
     }
 }
